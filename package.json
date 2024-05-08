@@ -1,5 +1,5 @@
 {
-  "name": "@grekomp/wonder-event-emitter",
+  "name": "@grekomp/wonder-interaction-stack",
   "version": "0.0.1",
   "main": "dist/index.cjs",
   "typings": "dist/index.d.ts",
