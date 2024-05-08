@@ -5,7 +5,7 @@ import { writable } from "src/store";
 export class Interaction<DataType> {
   private __id: string;
   private __data: DataType;
-  private __stack: InteractionStack;
+  private __stack?: InteractionStack;
   private __status: InteractionStatus = InteractionStatus.Pending;
 
   private __store = writable<unknown>(this);
@@ -19,7 +19,7 @@ export class Interaction<DataType> {
   }
   set data(value: DataType) {
     this.__data = value;
-    this.__stack.update(this);
+    this.__stack?.update(this);
     this.updateStore();
   }
   get status() {
@@ -36,7 +36,7 @@ export class Interaction<DataType> {
     stack,
     initialData,
   }: {
-    stack: InteractionStack;
+    stack?: InteractionStack;
     initialData: DataType;
   }) {
     this.__stack = stack;
@@ -53,7 +53,7 @@ export class Interaction<DataType> {
   start(data?: DataType) {
     this.__data = data ?? this.__data;
     this.__status = InteractionStatus.InProgress;
-    this.__stack.put(this);
+    this.__stack?.put(this);
     this._onStart();
     this.updateStore();
   }
@@ -62,14 +62,14 @@ export class Interaction<DataType> {
 
     this.__status = InteractionStatus.Completed;
     this._onComplete();
-    this.__stack.remove(this);
+    this.__stack?.remove(this);
     this.updateStore();
     this._onDispose();
   }
   cancel() {
     this.__status = InteractionStatus.Cancelled;
     this._onCancel();
-    this.__stack.remove(this);
+    this.__stack?.remove(this);
     this.updateStore();
     this._onDispose();
   }
