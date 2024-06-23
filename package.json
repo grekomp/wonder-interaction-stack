@@ -1,6 +1,6 @@
 {
   "name": "@grekomp/wonder-interaction-stack",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "main": "dist/index.cjs",
   "typings": "dist/index.d.ts",
   "module": "dist/index.js",
