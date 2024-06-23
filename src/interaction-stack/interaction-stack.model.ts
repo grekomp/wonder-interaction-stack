@@ -17,3 +17,9 @@ export type InteractionConstructor<ClassType extends Interaction<unknown>> = {
 
 export type GetInteractionDataType<ClassType extends Interaction<unknown>> =
   ClassType extends Interaction<infer InnerType> ? InnerType : never;
+
+/**
+ * Used for generic arguments where the type is not needed.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AnyData = any;

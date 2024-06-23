@@ -6,8 +6,8 @@ describe("InteractionStack", () => {
   describe("getAll", () => {
     it("returns all interactions in the stack", () => {
       const stack = new InteractionStack();
-      const interaction1 = new Interaction({ stack, initialData: {} });
-      const interaction2 = new Interaction({ stack, initialData: {} });
+      const interaction1 = new Interaction<unknown>({ stack, initialData: {} });
+      const interaction2 = new Interaction<unknown>({ stack, initialData: {} });
 
       interaction1.start();
       interaction2.start();
@@ -19,8 +19,8 @@ describe("InteractionStack", () => {
   describe("top", () => {
     it("returns the top interaction", () => {
       const stack = new InteractionStack();
-      const interaction1 = new Interaction({ stack, initialData: {} });
-      const interaction2 = new Interaction({ stack, initialData: {} });
+      const interaction1 = new Interaction<unknown>({ stack, initialData: {} });
+      const interaction2 = new Interaction<unknown>({ stack, initialData: {} });
 
       interaction1.start();
       interaction2.start();
@@ -159,7 +159,7 @@ describe("InteractionStack", () => {
       expect(stack.getChildrenOf(interaction2)).toEqual([
         interaction3,
         interaction4,
-      ]);
+      ] as Interaction<unknown>[]);
     });
 
     it("returns an empty array if the passed interaction is the top interaction", () => {
@@ -186,14 +186,14 @@ describe("InteractionStack", () => {
 
       stack.put(interaction);
 
-      expect(stack.getAll()).toEqual([interaction]);
+      expect(stack.getAll()).toEqual([interaction] as Interaction<unknown>[]);
     });
   });
 
   describe("pop", () => {
     it("removes the top interaction from the stack and returns it", () => {
       const stack = new InteractionStack();
-      const interaction = new Interaction({ stack, initialData: {} });
+      const interaction = new Interaction<unknown>({ stack, initialData: {} });
 
       interaction.start();
       expect(stack.pop()).toBe(interaction);
@@ -247,8 +247,8 @@ describe("InteractionStack", () => {
 
     it("does not remove all interactions after the passed interaction if popChildren is false", () => {
       const stack = new InteractionStack();
-      const interaction1 = new Interaction({ stack, initialData: {} });
-      const interaction2 = new Interaction({ stack, initialData: {} });
+      const interaction1 = new Interaction<unknown>({ stack, initialData: {} });
+      const interaction2 = new Interaction<unknown>({ stack, initialData: {} });
 
       interaction1.start();
       interaction2.start();
@@ -272,14 +272,14 @@ describe("InteractionStack", () => {
 
       const subscriber = mock();
 
-      stack.subscribe(subscriber);
-      expect(subscriber).toHaveBeenCalledTimes(1);
+      stack.onChange.on(subscriber);
+      expect(subscriber).toHaveBeenCalledTimes(0);
 
       interaction.start();
-      expect(subscriber).toHaveBeenCalledTimes(2);
+      expect(subscriber).toHaveBeenCalledTimes(1);
 
       stack.update(interaction);
-      expect(subscriber).toHaveBeenCalledTimes(3);
+      expect(subscriber).toHaveBeenCalledTimes(2);
     });
 
     it("throws a RangeError if the passed interaction is not in the stack", () => {

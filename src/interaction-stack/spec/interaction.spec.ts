@@ -74,21 +74,20 @@ describe("Interaction", () => {
     const subscriber = mock();
     expect(subscriber).not.toHaveBeenCalled();
 
-    stack.subscribe(subscriber);
-    expect(subscriber).toHaveBeenCalledTimes(1);
-    expect(subscriber).toHaveBeenLastCalledWith(stack);
+    stack.onChange.on(subscriber);
+    expect(subscriber).toHaveBeenCalledTimes(0);
 
     interaction.start();
-    expect(subscriber).toHaveBeenCalledTimes(2);
-    expect(subscriber).toHaveBeenLastCalledWith(stack);
+    expect(subscriber).toHaveBeenCalledTimes(1);
+    expect(subscriber).toHaveBeenLastCalledWith(stack, expect.anything());
 
     interaction.data = { test: "data" };
-    expect(subscriber).toHaveBeenCalledTimes(3);
-    expect(subscriber).toHaveBeenLastCalledWith(stack);
+    expect(subscriber).toHaveBeenCalledTimes(2);
+    expect(subscriber).toHaveBeenLastCalledWith(stack, expect.anything());
 
     interaction.complete();
-    expect(subscriber).toHaveBeenCalledTimes(4);
-    expect(subscriber).toHaveBeenLastCalledWith(stack);
+    expect(subscriber).toHaveBeenCalledTimes(3);
+    expect(subscriber).toHaveBeenLastCalledWith(stack, expect.anything());
   });
 
   it("calls `_onStart` when started", () => {

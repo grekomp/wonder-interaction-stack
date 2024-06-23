@@ -1,49 +1,52 @@
 import type { Interaction } from "src/interaction-stack/interaction";
-import { InteractionConstructor } from "src/interaction-stack/interaction-stack.model";
-import { writable } from "src/store";
+import {
+  AnyData,
+  InteractionConstructor,
+} from "src/interaction-stack/interaction-stack.model";
+import { Emitter } from "src/utils/emitter-listenable/emitter";
+import { Listenable } from "src/utils/emitter-listenable/listenable";
 
 export class InteractionStack {
-  private __store = writable<InteractionStack>(this);
   private __stack: Interaction<unknown>[] = [];
+  private __onChange = new Emitter<InteractionStack>();
+  readonly onChange = new Listenable<InteractionStack>(this.__onChange);
 
   getAll(): readonly Interaction<unknown>[] {
     return this.__stack;
   }
 
-  subscribe = this.__store.subscribe;
-
   top(): Interaction<unknown> | null {
     return this.__stack.at(-1) ?? null;
   }
-  isTop(interaction: Interaction<unknown>): boolean {
+  isTop<DataType>(interaction: Interaction<DataType>): boolean {
     return this.top() === interaction;
   }
-  getIndexOf(interaction: Interaction<unknown>): number {
+  getIndexOf(interaction: Interaction<AnyData>): number {
     return this.__stack.indexOf(interaction);
   }
-  isInStack(interaction: Interaction<unknown>): boolean {
+  isInStack(interaction: Interaction<AnyData>): boolean {
     return this.getIndexOf(interaction) >= 0;
   }
-  assertIsInStack(interaction: Interaction<unknown>): void {
+  assertIsInStack(interaction: Interaction<AnyData>): void {
     if (this.isInStack(interaction) === false)
       throw new RangeError("Interaction not found in stack");
   }
-  getByType<ClassType extends Interaction<unknown>>(
+  getByType<ClassType extends Interaction<AnyData>>(
     interactionClass: InteractionConstructor<ClassType>,
   ): ClassType | null {
     return (this.__stack.findLast(
       (interaction) => interaction instanceof interactionClass,
     ) ?? null) as ClassType | null;
   }
-  getChildrenOf(interaction: Interaction<unknown>) {
+  getChildrenOf(interaction: Interaction<AnyData>) {
     this.assertIsInStack(interaction);
     const index = this.getIndexOf(interaction);
     return this.__stack.slice(index + 1);
   }
 
-  put(interaction: Interaction<unknown>) {
+  put(interaction: Interaction<AnyData>) {
     this.__stack.push(interaction);
-    this.updateStore();
+    this.__triggerOnChange();
   }
 
   pop({ updateStore = true } = {}) {
@@ -51,10 +54,10 @@ export class InteractionStack {
     if (!interaction) return null;
 
     interaction._onStackPop();
-    if (updateStore) this.updateStore();
+    if (updateStore) this.__triggerOnChange();
     return interaction;
   }
-  remove(interaction: Interaction<unknown>, { popChildren = true } = {}) {
+  remove(interaction: Interaction<AnyData>, { popChildren = true } = {}) {
     this.assertIsInStack(interaction);
 
     if (popChildren) {
@@ -68,12 +71,12 @@ export class InteractionStack {
     const index = this.getIndexOf(interaction);
     this.__stack.splice(index, 1);
     interaction._onStackPop();
-    this.updateStore();
+    this.__triggerOnChange();
   }
 
-  update(interaction: Interaction<unknown>) {
+  update(interaction: Interaction<AnyData>) {
     this.assertIsInStack(interaction);
-    this.updateStore();
+    this.__triggerOnChange();
   }
 
   clear() {
@@ -82,7 +85,7 @@ export class InteractionStack {
     }
   }
 
-  private updateStore() {
-    this.__store.set(this);
+  private __triggerOnChange() {
+    this.__onChange.emit(this);
   }
 }

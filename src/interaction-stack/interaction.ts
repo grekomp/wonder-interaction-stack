@@ -1,14 +1,14 @@
 import type { InteractionStack } from "src/interaction-stack/interaction-stack";
 import { InteractionStatus } from "src/interaction-stack/interaction-stack.model";
-import { writable } from "src/store";
+import { Emitter } from "src/utils/emitter-listenable/emitter";
+import { Listenable } from "src/utils/emitter-listenable/listenable";
 
-export class Interaction<DataType> {
+export class Interaction<DataType = unknown> {
   private __id: string;
   private __data: DataType;
   private __stack?: InteractionStack;
   private __status: InteractionStatus = InteractionStatus.Pending;
 
-  private __store = writable<unknown>(this);
   name?: string;
 
   get id(): string {
@@ -20,7 +20,7 @@ export class Interaction<DataType> {
   set data(value: DataType) {
     this.__data = value;
     this.__stack?.update(this);
-    this.updateStore();
+    this.triggerOnChange();
   }
   get status() {
     return this.__status;
@@ -29,8 +29,8 @@ export class Interaction<DataType> {
     return this.__stack;
   }
 
-  readonly subscribe = this.__store.subscribe;
-  readonly unsubscribe = this.__store.unsubscribe;
+  private __onChange = new Emitter<Interaction<DataType>>();
+  readonly onChange = new Listenable<Interaction<DataType>>(this.__onChange);
 
   constructor({
     stack,
@@ -55,7 +55,7 @@ export class Interaction<DataType> {
     this.__status = InteractionStatus.InProgress;
     this.__stack?.put(this);
     this._onStart();
-    this.updateStore();
+    this.triggerOnChange();
   }
   complete() {
     if (this.__status !== InteractionStatus.InProgress) return;
@@ -63,14 +63,14 @@ export class Interaction<DataType> {
     this.__status = InteractionStatus.Completed;
     this._onComplete();
     this.__stack?.remove(this);
-    this.updateStore();
+    this.triggerOnChange();
     this._onDispose();
   }
   cancel() {
     this.__status = InteractionStatus.Cancelled;
     this._onCancel();
     this.__stack?.remove(this);
-    this.updateStore();
+    this.triggerOnChange();
     this._onDispose();
   }
 
@@ -80,7 +80,7 @@ export class Interaction<DataType> {
   _onStackPop() {}
   _onDispose() {}
 
-  updateStore() {
-    this.__store.set(this);
+  triggerOnChange() {
+    this.__onChange.emit(this);
   }
 }
